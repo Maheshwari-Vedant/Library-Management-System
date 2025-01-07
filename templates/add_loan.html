@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Add Loan{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Add New Loan</h2>
+    <form action="{{ url_for('add_loan') }}" method="post">
+
+        <!-- User Selection -->
+        <div class="search-bar mb-3">
+            <input type="text" id="userSearchInput" placeholder="Search users by username or email..." class="form-control">
+            <button type="button" class="btn btn-primary" onclick="searchUsers()">Search</button>
+        </div>
+        
+        <!-- Users Table -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>User ID</th>
+                    <th>Username</th> <!-- Updated column header -->
+                    <th>Email</th>
+                </tr>
+            </thead>
+            <tbody id="usersTableBody">
+                {% for user in users %}
+                {% if user.user_type == 'student' %}
+                <tr>
+                    <td><input type="radio" name="selected_user" value="{{ user.id }}"></td>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td> <!-- Replaced user.name with user.username -->
+                    <td>{{ user.email }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Book Selection -->
+        <div class="search-bar mb-3">
+            <input type="text" id="searchInput" placeholder="Search books by ISBN, title, or author..." class="form-control">
+            <button type="button" class="btn btn-primary" onclick="searchBooks()">Search</button>
+        </div>
+
+        <!-- Books Table -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>Book ID</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="booksTableBody">
+                {% for book in books %}
+                {% if book.status == 'Available' %}
+                <tr>
+                    <td><input type="radio" name="selected_book" value="{{ book.isbn }}"></td>
+                    <td>{{ book.isbn }}</td>
+                    <td>{{ book.title }}</td>
+                    <td>{{ book.author }}</td>
+                    <td><span class="badge bg-success">{{ book.status }}</span></td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary">Create Loan</button>
+        <a href="{{ url_for('librarian_dashboard') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+<script>
+    // Search users
+    function searchUsers() {
+        const query = document.getElementById('userSearchInput').value.toLowerCase(); // Correct ID here
+        const rows = document.querySelectorAll('#usersTableBody tr');
+
+        rows.forEach(row => {
+            const username = row.cells[2].textContent.toLowerCase(); // Username
+            const email = row.cells[3].textContent.toLowerCase(); // Email
+
+            if (username.includes(query) || email.includes(query)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // Search books
+    function searchBooks() {
+        const query = document.getElementById('searchInput').value.toLowerCase(); // Updated to correct ID
+        const rows = document.querySelectorAll('#booksTableBody tr');
+
+        rows.forEach(row => {
+            const title = row.cells[2].textContent.toLowerCase();
+            const author = row.cells[3].textContent.toLowerCase();
+            const isbn = row.cells[1].textContent.toLowerCase();
+
+            if (title.includes(query) || author.includes(query) || isbn.includes(query)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}

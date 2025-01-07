@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome to ABC Library{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Welcome to ABC Library</h1>
+    <p class="text-center">At ABC Library, we believe in the power of knowledge and the joy of reading. Our mission is to provide a welcoming space where everyone can explore, learn, and grow through access to diverse resources.</p>
+
+    <h2 class="text-center mt-5">Key Features</h2>
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                
+                <div class="card-body">
+                    <h5 class="card-title">Explore Our Collection</h5>
+                    <p class="card-text">Easily search for books, magazines, and resources across various genres.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                
+                <div class="card-body">
+                    <h5 class="card-title">Join Community Events</h5>
+                    <p class="card-text">Participate in workshops, reading clubs, and special events designed for all ages.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                
+                <div class="card-body">
+                    <h5 class="card-title">Member Services</h5>
+                    <p class="card-text">Manage your account, reserve books, and receive personalized recommendations.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="text-center mt-5">What Our Members Say</h2>
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <blockquote class="blockquote text-center">
+                <p class="mb-0">"ABC Library is my favorite place! The staff is friendly and the resources are extensive."</p>
+                <footer class="blockquote-footer">Sarah Johnson, Regular Patron</footer>
+            </blockquote>
+        </div>
+        <div class="col-md-4">
+            <blockquote class="blockquote text-center">
+                <p class="mb-0">"I love the community events they host. It makes reading more fun and engaging!"</p>
+                <footer class="blockquote-footer">Michael Smith, Event Participant</footer>
+            </blockquote>
+        </div>
+        <div class="col-md-4">
+            <blockquote class="blockquote text-center">
+                <p class="mb-0">"The online catalog is very user-friendly. I can find what I need in seconds!"</p>
+                <footer class="blockquote-footer">Emily Davis, Library Member</footer>
+            </blockquote>
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <h2>Get Started at ABC Library!</h2>
+        <p>Join us today and unlock a world of knowledge and creativity.</p>
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Sign Up Now</a>
+    </div>
+
+    <div class="text-center mt-5">
+        <h2>ABC Library Statistics</h2>
+        <p><strong>Over 10,000+</strong> Books Available</p>
+        <p><strong>2,500+</strong> Active Members</p>
+        <p><strong>300+</strong> Events Held Last Year</p>
+    </div>
+</div>
+{% endblock %}

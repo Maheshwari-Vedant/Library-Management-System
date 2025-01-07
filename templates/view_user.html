@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>User Details</h2>
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+
+    <h3>Loaned Books</h3>
+    <table class="styled-table"> <!-- Assuming 'styled-table' is the class used in library_dashboard -->
+        <thead>
+            <tr>
+                <th>Book</th>
+                <th>Loan Date</th>
+                <th>Due Date</th>
+                <th>Return Date</th>
+                <th>Overdue</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for loan in loans %}
+            <tr>
+                <td>{{ loan.book_id }}</td>
+                <td>{{ loan.loan_date }}</td>
+                <td>{{ loan.due_date }}</td>
+                <td>{{ loan.return_date or "Not returned" }}</td>
+                <td>{{ "Yes" if loan.is_overdue() else "No" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3>Reserved Books</h3>
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Book</th>
+                <th>Reservation Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reservation in reservations %}
+            <tr>
+                <td>{{ reservation.book_id }}</td>
+                <td>{{ reservation.reservation_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3>Fines</h3>
+<p><strong>Total Fine (Overdue + Existing):</strong> ${{ "{:.2f}".format(total_fines) }}</p>
+<table class="styled-table">
+    <thead>
+        <tr>
+            <th>Fine Amount</th>
+            <th>Created At</th>
+            <th>Paid</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for fine in fines %}
+        <tr>
+            <td>${{ "{:.2f}".format(fine.amount) }}</td>
+            <td>{{ fine.created_at }}</td>
+            <td>{{ "No" if not fine.is_paid else "Yes" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+    <!-- Back to Dashboard Button -->
+    <div class="back-button">
+        <a href="{{ url_for('librarian_dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

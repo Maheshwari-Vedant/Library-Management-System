@@ -1,0 +1,473 @@
+{% extends "base.html" %}
+
+{% block title %}Librarian Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- First row of stat cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total Books</h3>
+            <div class="stat-value">{{ total_books }}</div> <!-- Dynamic total books -->
+        </div>
+        <div class="stat-card">
+            <h3>Total Sections</h3>
+            <div class="stat-value">{{ total_sections }}</div> <!-- Dynamic total sections -->
+        </div>
+        <div class="stat-card">
+            <h3>Total Users</h3>
+            <div class="stat-value">{{ total_users }}</div> <!-- Dynamic total users -->
+        </div>
+    </div>
+
+    <!-- Second row of stat cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Books Loaned</h3>
+            <div class="stat-value">{{ books_loaned }}</div> <!-- Dynamic books loaned -->
+        </div>
+        <div class="stat-card">
+            <h3>Books Reserved</h3>
+            <div class="stat-value">{{ books_reserved }}</div> <!-- Dynamic books reserved -->
+        </div>
+        <div class="stat-card">
+            <h3>Outstanding Fines</h3>
+            <div class="stat-value">${{ "%.2f"|format(outstanding_fines) }}</div> <!-- Dynamic fines (formatted as currency) -->
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" data-tab="loans" onclick="showTab('loans')">Loans</button>
+        <button class="tab" data-tab="reserves" onclick="showTab('reserves')">Reserved</button>
+        <button class="tab" data-tab="users" onclick="showTab('users')">Users</button>
+        <button class="tab" data-tab="books" onclick="showTab('books')">Books</button>
+        <button class="tab" data-tab="sections" onclick="showTab('sections')">Sections</button>
+        <button class="tab" data-tab="fines" onclick="showTab('fines')">Fines</button>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="alert alert-success">
+        {% for category, message in messages %}
+          <p>{{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% endwith %}
+  
+    <!-- Tab content areas -->
+    <div class="content-area">
+        <!-- Loans table -->
+<div id="loans" class="tab-content">
+    <div class="content-box">
+        <div class="search-bar">
+            <input type="text" id="loanSearchInput" placeholder="Search loans by Loan ID, Book Title, or User..." class="form-control" >
+            <button class="btn btn-primary" onclick="searchLoans()">Search</button>
+            <a href="{{ url_for('add_loan') }}" class="btn btn-success">+ New Loan</a>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Loan ID</th>
+                    <th>Book Title</th>
+                    <th>User</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="loanTableBody">
+                {% for loan in loans %}
+                <tr>
+                    <td>{{ loan.id }}</td>
+                    <td>{{ book_dict[loan.book_id] }}</td> <!-- Display book title -->
+                    <td>{{ user_dict[loan.user_id] }}</td> <!-- Display username -->
+                    <td>{{ loan.due_date.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        {% if loan.is_returned %}
+                            <span class="badge bg-success">Returned</span>
+                        {% else %}
+                            {% if loan.due_date < current_time %}
+                                <span class="badge bg-danger">Overdue</span>
+                            {% else %}
+                                <span class="badge bg-warning">Due</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td class="action-buttons">
+                        <form action="{{ url_for('renew_loan', loan_id=loan.id) }}" method="post" onsubmit="return confirm('Are you sure you want to renew this loan?');">
+                            <button type="submit" class="btn btn-warning">Renew</button>
+                        </form>
+                        <form action="{{ url_for('return_loan', loan_id=loan.id) }}" method="post" onsubmit="return confirm('Are you sure you want to return this loan?');">
+                            <button type="submit" class="btn btn-danger">Return</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+        
+        <!-- Reserves table -->
+<div id="reserves" class="tab-content" style="display:none;">
+    <div class="content-box">
+        <div class="search-bar">
+            <input type="text" placeholder="Search reserved books by Reservation ID, Book Title, or User..." class="form-control" >
+            <button class="btn btn-primary" onclick="searchReservedBooks()">Search</button>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Reservation ID</th>
+                    <th>Book Title</th>
+                    <th>User</th>
+                    <th>Reservation Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="reservedTableBody">
+
+                {% for reserve in reserved_books %}  <!-- Iterate over reserved books -->
+                <tr>
+                    <td>{{ reserve.id }}</td>
+                    <td>{{ book_dict[reserve.book_id] }}</td>  <!-- Display book title -->
+                    <td>{{ user_dict[reserve.user_id] }}</td>  <!-- Display username -->
+                    <td>{{ reserve.reservation_date.strftime('%Y-%m-%d') }}</td>
+                    <td><span class="badge bg-info">Reserved</span></td>
+                    <td class="action-buttons">
+                        <form action="{{ url_for('loan_book', reserve_id=reserve.id) }}" method="post" onsubmit="return confirm('Are you sure you want to loan this book?');">
+                            <button type="submit" class="btn btn-success">Loan</button>  <!-- Single button for Loan -->
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+        <!-- Users table -->
+        <div id="users" class="tab-content" style="display:none;">
+            <div class="content-box">
+                <div class="search-bar">
+                    <input type="text" id="userSearchInput" placeholder="Search users by  User id, Username or E-mail..." class="form-control" >
+                    <button class="btn btn-primary" onclick="searchUsers()">Search</button>
+                </div>
+        
+                <table class="table" id="userTable">  <!-- Added ID here -->
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            {% if user.user_type == 'student' %} <!-- Only show students -->
+                            <tr>
+                                <td>{{ user.id }}</td>
+                                <td>{{ user.username }}</td> <!-- Display username -->
+                                <td>{{ user.email }}</td> <!-- Display user email -->
+                                <td class="action-buttons">
+                                    <a href="{{ url_for('view_user', user_id=user.id) }}" class="btn btn-primary">View</a>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+
+
+        <!-- Books table -->
+        <div id="books" class="tab-content" style="display:none;">
+            <div class="content-box">
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Search books by ISBN, Title, or Author..." class="form-control">
+                    <button class="btn btn-primary" onclick="searchBooks()">Search</button>
+                    <a href="{{ url_for('add_book') }}" class="btn btn-success">+ New Book</a>
+                </div>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Book ID</th>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for book in books %}
+                        <tr>
+                            <td>{{ book.isbn }}</td>
+                            <td>{{ book.title }}</td>
+                            <td>{{ book.author }}</td>
+                            <td>
+                                <span class="badge {% if book.status == 'Available' %}bg-success{% elif book.status == 'Reserved' %}bg-info{% else %}bg-danger{% endif %}">
+                                    {{ book.status }}
+                                </span>
+                                
+                            </td>
+                            <td class="action-buttons">
+                                <a href="{{ url_for('edit_book', book_id=book.isbn) }}" class="btn btn-warning">Edit</a>
+                                <form action="{{ url_for('delete_book', book_id=book.isbn) }}" method="post" onsubmit="return confirm('Are you sure you want to delete this book?');">
+                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sections table -->
+        <div id="sections" class="tab-content" style="display:none;">
+            <div class="content-box">
+                <div class="search-bar">
+                    <input type="text" placeholder="Search Sections by Section id, Name or Description ..." class="form-control">
+                    <button class="btn btn-primary" onclick="searchSections()">Search</button>
+                    <a href="{{ url_for('add_section') }}" class="btn btn-success">+ New Section</a>
+                    
+                </div>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Section ID</th>
+                            <th>Section Name</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for section in sections %}
+                        <tr>
+                            <td>{{ section.id }}</td>
+                            <td>{{ section.name }}</td>
+                            <td>{{ section.description }}</td>
+                            <td class="action-buttons">
+                                <a href="{{ url_for('edit_section', section_id=section.id) }}" class="btn btn-warning">Edit</a>
+                                <a href="{{ url_for('view_section_lib', section_id=section.id, from='librarian') }}" class="btn btn-primary">View Section</a>
+
+
+                                <form action="{{ url_for('delete_section', section_id=section.id) }}" method="post" onsubmit="return confirm('Are you sure you want to delete this section?');">
+                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Fines table -->
+        <!-- Fines table -->
+<div id="fines" class="tab-content" style="display:none;">
+    <div class="content-box">
+        <div class="search-bar">
+            <input type="text" placeholder="Search fines..." class="form-control" ">
+            <button class="btn btn-primary" onclick="searchFines()">Search</button>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Fine ID</th>
+                    <th>User</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fine in fines %}
+                <tr>
+                    <td>{{ fine.id }}</td>
+                    <td>{{ user_dict[fine.user_id] }}</td> <!-- Display username -->
+                    <td>${{ "%.2f"|format(fine.amount) }}</td>
+                    <td>{{ fine.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        {% if fine.is_paid %}
+                            <span class="badge bg-success">Paid</span>
+                        {% else %}
+                            <span class="badge bg-danger">Unpaid</span>
+                        {% endif %}
+                    </td>
+                    <td class="action-buttons">
+                        {% if not fine.is_paid %}
+                            <form action="{{ url_for('mark_fine_paid', fine_id=fine.id) }}" method="post" onsubmit="return confirm('Are you sure you want to mark this fine as paid?');">
+                                <button type="submit" class="btn btn-success">Mark Paid</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+    </div>
+</div>
+
+<script>
+    function showTab(tabId) {
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(function(content) {
+            content.style.display = 'none';
+        });
+
+        // Remove active class from all tabs
+        document.querySelectorAll('.tab').forEach(function(tab) {
+            tab.classList.remove('active');
+        });
+
+        // Show the selected tab content
+        document.getElementById(tabId).style.display = 'block';
+
+        // Add active class to the clicked tab using data-tab attribute
+        document.querySelector('[data-tab="' + tabId + '"]').classList.add('active');
+    }
+
+    function searchBooks() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const table = document.querySelector('#books .table tbody');
+        const rows = table.querySelectorAll('tr');
+
+        rows.forEach(row => {
+            const isbn = row.cells[0].textContent.toLowerCase();
+            const title = row.cells[1].textContent.toLowerCase();
+            const author = row.cells[2].textContent.toLowerCase();
+
+            if (isbn.includes(query) || title.includes(query) || author.includes(query)) {
+                row.style.display = ''; // Show the row
+            } else {
+                row.style.display = 'none'; // Hide the row
+            }
+        });
+    }
+
+    function searchSections() {
+        const query = document.querySelector('#sections .search-bar input[type="text"]').value.toLowerCase();
+        const table = document.querySelector('#sections .table tbody');
+        const rows = table.querySelectorAll('tr');
+
+        rows.forEach(row => {
+            const sectionId = row.cells[0].textContent.toLowerCase();
+            const sectionName = row.cells[1].textContent.toLowerCase();
+            const description = row.cells[2].textContent.toLowerCase();
+
+            if (sectionId.includes(query) || sectionName.includes(query) || description.includes(query)) {
+                row.style.display = ''; // Show the row
+            } else {
+                row.style.display = 'none'; // Hide the row
+            }
+        });
+    }
+    
+
+    function searchLoans() {
+        const query = document.getElementById('loanSearchInput').value.toLowerCase();
+        const tableBody = document.querySelector('#loanTableBody');
+        const rows = tableBody.querySelectorAll('tr');
+
+        rows.forEach(row => {
+            const loanId = row.cells[0].textContent.toLowerCase();
+            const bookTitle = row.cells[1].textContent.toLowerCase();
+            const userName = row.cells[2].textContent.toLowerCase();
+
+            if (loanId.includes(query) || bookTitle.includes(query) || userName.includes(query)) {
+                row.style.display = ''; // Show the row
+            } else {
+                row.style.display = 'none'; // Hide the row
+            }
+        });
+    }
+    function searchReservedBooks() {
+    const query = document.querySelector('#reserves .search-bar input').value.toLowerCase();
+    const tableBody = document.getElementById('reservedTableBody'); // Corrected ID
+    const rows = tableBody.querySelectorAll('tr');
+
+    rows.forEach(row => {
+        const reserveId = row.cells[0].textContent.toLowerCase();
+        const bookTitle = row.cells[1].textContent.toLowerCase();
+        const userName = row.cells[2].textContent.toLowerCase(); // Include user search if desired
+
+        if (reserveId.includes(query) || bookTitle.includes(query) || userName.includes(query)) {
+            row.style.display = ''; // Show the row if it matches the search query
+        } else {
+            row.style.display = 'none'; // Hide the row if it doesn't match
+        }
+    });
+}
+function searchUsers() {
+    // Get the input value
+    const input = document.getElementById('userSearchInput');
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('userTable');
+    const tbody = table.getElementsByTagName('tbody')[0];
+    const rows = tbody.getElementsByTagName('tr');
+
+    // Loop through all table rows and hide those that don't match the search
+    for (let i = 0; i < rows.length; i++) {
+        const userIdCell = rows[i].getElementsByTagName('td')[0]; // User ID is the first cell
+        const usernameCell = rows[i].getElementsByTagName('td')[1]; // Username is the second cell
+        const emailCell = rows[i].getElementsByTagName('td')[2]; // Email is the third cell
+        
+        if (userIdCell || usernameCell || emailCell) {
+            const userIdText = userIdCell.textContent || userIdCell.innerText;
+            const usernameText = usernameCell.textContent || usernameCell.innerText;
+            const emailText = emailCell.textContent || emailCell.innerText;
+
+            // Check if the search term matches user ID, username, or email
+            if (userIdText.toLowerCase().indexOf(filter) > -1 || 
+                usernameText.toLowerCase().indexOf(filter) > -1 || 
+                emailText.toLowerCase().indexOf(filter) > -1) {
+                rows[i].style.display = ""; // Show the row
+            } else {
+                rows[i].style.display = "none"; // Hide the row
+            }
+        }
+    }
+}
+
+function searchFines() {
+    const query = document.querySelector('#fines .search-bar input').value.toLowerCase();
+    const tableBody = document.querySelector('#fines .table tbody');
+    const rows = tableBody.querySelectorAll('tr');
+
+    rows.forEach(row => {
+        const fineId = row.cells[0].textContent.toLowerCase(); // Fine ID is the first cell
+        const userName = row.cells[1].textContent.toLowerCase(); // User is the second cell
+        const amount = row.cells[2].textContent.toLowerCase(); // Amount is the third cell
+
+        // Check if the query matches any of the fine details
+        if (fineId.includes(query) || userName.includes(query) || amount.includes(query)) {
+            row.style.display = ''; // Show the row
+        } else {
+            row.style.display = 'none'; // Hide the row
+        }
+    });
+}
+
+
+
+
+
+</script>
+{% endblock %}

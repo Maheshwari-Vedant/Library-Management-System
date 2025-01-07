@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}View Section: {{ section.name }}{% endblock %}
+
+{% block content %}
+<div class="view-section container mt-4">
+    <h2 class="text-center mb-4">Section Details</h2>
+
+    <div class="section-info card p-4 mb-4">
+        <h3>{{ section.name }}</h3>
+        <p class="text-muted"><strong>Description:</strong> {{ section.description }}</p>
+    </div>
+
+    <h3 class="mb-3">Books in this Section</h3>
+    <table class="table table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>Book ID</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if books %}
+                {% for book in books %}
+                <tr>
+                    <td>{{ book.isbn }}</td>
+                    <td>{{ book.title }}</td>
+                    <td>{{ book.author }}</td>
+                    <td>
+                        <span class="badge {% if book.status == 'Available' %}bg-success{% elif book.status == 'Reserved' %}bg-info{% else %}bg-danger{% endif %}">
+                            {{ book.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="4" class="text-center">No books found in this section.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <div class="text-center">
+        <a href="{{ url_for('librarian_dashboard') }}" class="btn btn-danger">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

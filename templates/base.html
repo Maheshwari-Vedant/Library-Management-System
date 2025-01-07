@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Library Management{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --navy-blue: #2D4373; /* Navy Blue (background) */
+            --beige-gold: #E5B87F; /* Beige-Gold (buttons, accents) */
+            --white: #FFFFFF; /* White */
+            --light-azure: #f0f8ff; /* Light Azure (background) */
+            --light-cyan: #d1ecf1; /* Light Cyan (alerts) */
+            --dark-cyan: #0c5460; /* Dark Cyan (alert text) */
+            --button-hover-bg: #CF9D64; /* Slightly darker beige-gold on hover */
+            --input-bg: #F5F5F5; /* Light grey for input background */
+            --alert-bg: #f8d7da; /* Alert background for messages */
+            --alert-text: #721c24; /* Alert text for messages */
+            --light-gray: #ecf0f1; /* Light gray for table headers */
+            --primary-color: #2c3e50; /* Primary color for headings */
+            --secondary-color: #3498db; /* Secondary color for buttons */
+            --success-color: #27ae60; /* Success color for buttons */
+            --warning-color: #f1c40f; /* Warning color for buttons */
+            --danger-color: #e74c3c; /* Danger color for buttons */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            background: var(--light-azure);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /* Ensure body takes full viewport height */
+        }
+
+        .navbar {
+            background-color: var(--navy-blue);
+        }
+
+        .navbar-brand img {
+            height: 40px; /* Set height to fit the navbar */
+            width: auto; /* Keep aspect ratio */
+        }
+
+        .nav-link {
+            color: var(--white);
+        }
+
+        .nav-link:hover {
+            color: var(--light-cyan);
+        }
+
+        .btn-outline-success {
+            color: var(--white);
+            border-color: var(--white);
+        }
+
+        .btn-outline-success:hover {
+            background-color: var(--white);
+            color: var(--navy-blue); /* Invert colors on hover */
+        }
+
+        /* Footer styling */
+        footer {
+            background-color: var(--navy-blue);
+            color: var(--white);
+            padding: 10px 0;
+            margin-top: auto; /* Ensure footer stays at the bottom */
+        }
+
+        /* Alert styling */
+        .alert-info {
+            background-color: var(--light-cyan); /* Light cyan */
+            color: var(--dark-cyan);
+        }
+
+        /* Main content section */
+        .container {
+            flex: 1; /* Ensure the container takes up the remaining space */
+            padding: 20px;
+        }
+
+        /* Stats grid styling */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: var(--white);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .tab.active {
+            background: var(--secondary-color);
+            color: var(--white);
+        }
+
+        .content-area {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: var(--input-bg);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+       /* Flash message container (no background color) */
+.flash-message {
+    padding: 0; /* Adjust to remove padding */
+    margin: 10px 0;
+    border-radius: 4px;
+    text-align: center;
+}
+
+/* Success message (green) */
+.flash-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    padding: 15px; /* Add padding to flash messages themselves */
+    margin: 10px 0;
+    border-radius: 4px;
+}
+
+/* Error message (red) */
+.flash-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    padding: 15px; /* Add padding to flash messages themselves */
+    margin: 10px 0;
+    border-radius: 4px;
+}
+
+
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        th {
+            background: var(--light-gray);
+            color: var(--primary-color);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        /* Reset blockquote styles */
+        blockquote {
+            background-color: transparent !important; /* Force background to be transparent */
+            border-left: none !important; /* Remove the left border */
+            padding: 0 !important; /* Remove padding */
+            margin: 20px 0; /* Add vertical margin */
+        }
+
+        blockquote p {
+            font-style: italic; /* Optional: italic styling */
+            margin-bottom: 0; /* Remove default bottom margin */
+        }
+
+        blockquote footer {
+            background-color: transparent !important; /* Ensure footer has no background */
+            display: inline; /* Display inline to avoid block formatting */
+            font-weight: bold; /* Make footer bold */
+            color: grey; /* Optional: Set text color */
+            margin-top: 5px; /* Add space above footer */
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <nav class="navbar navbar-expand-lg navbar-light shadow">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='images/something.jpg') }}" alt="Library System Logo"> <!-- Replace with your logo path -->
+            </a>
+            
+            <div class="collapse navbar-collapse">
+                <!-- Search bar shown only when user is logged in -->
+                <!-- {% if session.get('token') %}
+                <form class="d-flex" action="{{ url_for('search_books') }}" method="POST">
+                    <input class="form-control me-2" type="search" name="search_term" placeholder="Search Books">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </form>
+                {% endif %} -->
+                <ul class="navbar-nav ms-auto">
+                    <!-- Show login/register when not logged in -->
+                    {% if not session.get('token') %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('register') }}">Register</a></li>
+                    {% else %}
+                    <!-- Show logout when logged in -->
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Section -->
+    <div class="container mt-4">
+        <!-- Flash messages -->
+        <!-- {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="alert alert-info">
+            {{ messages[0] }}
+        </div>
+        {% endif %}
+        {% endwith %} -->
+
+        {% block content %}
+        <!-- Content goes here -->
+        {% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <!-- <footer class="text-center py-4">
+        Project by DarkKnight263
+    </footer> -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

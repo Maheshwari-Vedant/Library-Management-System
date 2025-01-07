@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Add Section{% endblock %}
+
+{% block content %}
+<div class="add-section-form">
+    <h2>Add New Section</h2>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="alert alert-info">
+            {{ messages[0] }}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('add_section') }}" method="post">
+        <!-- Section Name (Editable) -->
+        <div class="form-group mb-3">
+            <label for="section_name">Section Name</label>
+            <input type="text" id="section_name" name="section_name" class="form-control" required>
+        </div>
+
+        <!-- Section Description (Editable) -->
+        <div class="form-group mb-3">
+            <label for="section_description">Section Description</label>
+            <textarea id="section_description" name="section_description" class="form-control" required></textarea>
+        </div>
+
+        <!-- Search Books Section -->
+        <div class="search-bar mb-3">
+            <input type="text" id="searchInput" placeholder="Search books by ISBN, title, or author..." class="form-control">
+            <button type="button" class="btn btn-primary" onclick="searchBooks()">Search</button>
+            <!-- <a href="{{ url_for('add_book') }}" class="btn btn-success">+ New Book</a> -->
+        </div>
+
+        <!-- Books Table -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>Book ID</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="booksTableBody">
+                {% for book in books %}
+                <tr>
+                    <td><input type="checkbox" name="selected_books" value="{{ book.isbn }}"></td>
+                    <td>{{ book.isbn }}</td>
+                    <td>{{ book.title }}</td>
+                    <td>{{ book.author }}</td>
+                    <td>
+                        <span class="badge {% if book.status == 'Available' %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ book.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary">Create Section</button>
+        <a href="{{ url_for('librarian_dashboard') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+<script>
+    function searchBooks() {
+        const input = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('#booksTableBody tr');
+
+        rows.forEach(row => {
+            const title = row.cells[2].textContent.toLowerCase(); // Title
+            const author = row.cells[3].textContent.toLowerCase(); // Author
+            const isbn = row.cells[1].textContent.toLowerCase(); // ISBN
+
+            // Check if the row matches the search criteria
+            if (title.includes(input) || author.includes(input) || isbn.includes(input)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}
